@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>С днём рождения!</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            overflow-x: hidden;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #fce4e0 0%, #f4c8c4 50%, #e8a8a4 100%);
+            background-attachment: fixed;
+            color: #5c3d38;
+            min-height: 100vh;
+        }
+
+        #lock-screen {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: linear-gradient(135deg, #f4c8c0, #e8a8a0);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 1s ease;
+            padding: 20px;
+            text-align: center;
+        }
+
+        #lock-screen h1 {
+            font-size: clamp(1.4rem, 5vw, 2rem);
+            margin-bottom: 20px;
+            color: #6b4a45;
+            font-weight: 500;
+            text-shadow: 0 1px 3px rgba(255, 255, 255, 0.5);
+        }
+
+        #timer {
+            font-size: clamp(1.8rem, 8vw, 3rem);
+            font-weight: 600;
+            color: #6b4a45;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+            margin-bottom: 20px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        #lock-screen p {
+            font-size: clamp(0.95rem, 3.5vw, 1.2rem);
+            opacity: 0.9;
+            color: #6b4a45;
+            max-width: 500px;
+        }
+
+        #main-content {
+            display: none;
+            position: relative;
+            width: 100%;
+            min-height: 100vh;
+            padding: 10px;
+            padding-bottom: 40px;
+            box-sizing: border-box;
+        }
+
+        #photos-area {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .photo-container {
+            position: absolute;
+            opacity: 0;
+            transform: translateY(-150px) scale(0.5) rotate(0deg);
+            transition: all 1.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 10;
+            box-shadow: 0 10px 25px rgba(107, 74, 69, 0.25);
+            border-radius: 12px;
+            overflow: hidden;
+            will-change: transform, opacity;
+        }
+
+        .photo-container img {
+            display: block;
+            width: 100%;
+            height: auto;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 3px solid #d9a8a0;
+        }
+
+        .photo-container.landed {
+            opacity: 1;
+            transform: translateY(0) scale(1) rotate(var(--rot));
+        }
+
+        #center-block {
+            position: relative;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding-top: 20px;
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        #birthday-title {
+            font-size: clamp(1.6rem, 7vw, 3.2rem);
+            font-weight: 600;
+            color: #6b4a45;
+            text-shadow:
+                0 0 12px rgba(255, 255, 255, 0.7),
+                0 0 24px rgba(255, 240, 235, 0.5),
+                0 3px 8px rgba(107, 74, 69, 0.2);
+            text-align: center;
+            margin: 0 0 20px 0;
+            padding: 0 10px;
+            opacity: 0;
+            transform: translateY(-40px) scale(0.8);
+            transition: all 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            line-height: 1.2;
+            letter-spacing: 2px;
+            animation: titleGlow 4s ease-in-out infinite alternate;
+            width: 100%;
+        }
+
+        @keyframes titleGlow {
+            from {
+                text-shadow:
+                    0 0 12px rgba(255, 255, 255, 0.6),
+                    0 0 24px rgba(255, 240, 235, 0.4),
+                    0 3px 8px rgba(107, 74, 69, 0.2);
+            }
+            to {
+                text-shadow:
+                    0 0 20px rgba(255, 255, 255, 0.9),
+                    0 0 40px rgba(255, 240, 235, 0.6),
+                    0 3px 8px rgba(107, 74, 69, 0.2);
+            }
+        }
+
+        #birthday-title.show {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .center-photo {
+            position: relative;
+            width: clamp(200px, 60vw, 450px);
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 15px 40px rgba(107, 74, 69, 0.3);
+            border-radius: 16px;
+            overflow: hidden;
+            display: block;
+            margin-bottom: 25px;
+        }
+
+        .center-photo.landed {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .center-photo img {
+            display: block;
+            width: 100%;
+            height: auto;
+            border-radius: 16px;
+            border: 4px solid #d9a8a0;
+        }
+
+        #congratulation {
+            text-align: center;
+            font-size: clamp(0.85rem, 3.2vw, 1.4rem);
+            font-weight: 400;
+            color: #5c3d38;
+            margin: 0 auto 60px;
+            width: 100%;
+            max-width: 800px;
+            padding: clamp(12px, 4vw, 25px);
+            background: rgba(255, 245, 240, 0.55);
+            border: 2px solid rgba(180, 130, 120, 0.5);
+            border-radius: 20px;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            opacity: 0;
+            transform: translateY(40px);
+            transition: all 1.2s ease;
+            line-height: 1.5;
+            box-shadow: 0 10px 25px rgba(107, 74, 69, 0.15);
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        #congratulation.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .firework {
+            position: fixed;
+            pointer-events: none;
+            z-index: 5000;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            animation: fireworkBurst 1s ease-out forwards;
+        }
+
+        @keyframes fireworkBurst {
+            0% {
+                width: 0;
+                height: 0;
+                opacity: 1;
+                box-shadow:
+                    0 0 0 0 rgba(255, 245, 240, 1),
+                    0 0 0 0 rgba(217, 168, 160, 1);
+            }
+            100% {
+                width: 300px;
+                height: 300px;
+                opacity: 0;
+                box-shadow:
+                    0 0 60px 30px rgba(255, 245, 240, 0),
+                    0 0 100px 50px rgba(217, 168, 160, 0);
+            }
+        }
+
+        .firework-dot {
+            position: fixed;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 5000;
+            animation: dotFly 1.2s ease-out forwards;
+        }
+
+        @keyframes dotFly {
+            0% {
+                opacity: 1;
+                transform: translate(0, 0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(var(--dx), var(--dy)) scale(0.3);
+            }
+        }
+
+        @media (max-width: 900px) {
+            #birthday-title {
+                font-size: clamp(1.5rem, 6vw, 2.4rem);
+            }
+            .center-photo {
+                width: clamp(200px, 55vw, 340px);
+            }
+        }
+
+        @media (max-width: 600px) {
+            #main-content {
+                padding: 8px;
+                padding-bottom: 30px;
+            }
+
+            #center-block {
+                padding-top: 15px;
+            }
+
+            #birthday-title {
+                font-size: clamp(1.4rem, 7vw, 1.9rem);
+                margin-bottom: 15px;
+                letter-spacing: 1.5px;
+            }
+
+            .center-photo {
+                width: clamp(180px, 65vw, 280px);
+                margin-bottom: 20px;
+            }
+
+            .center-photo img {
+                border-width: 3px;
+            }
+
+            #congratulation {
+                font-size: clamp(0.8rem, 3.4vw, 1rem);
+                padding: 15px 12px;
+                margin-bottom: 40px;
+                line-height: 1.5;
+                border-radius: 16px;
+            }
+
+            .photo-container {
+                border-radius: 8px;
+            }
+
+            .photo-container img {
+                border-width: 2px;
+                border-radius: 8px;
+            }
+        }
+
+        @media (max-width: 380px) {
+            #birthday-title {
+                font-size: 1.3rem;
+                letter-spacing: 1px;
+            }
+
+            .center-photo {
+                width: clamp(160px, 70vw, 240px);
+            }
+
+            #congratulation {
+                font-size: 0.8rem;
+                padding: 12px 10px;
+            }
+
+            #timer {
+                font-size: 1.6rem;
+            }
+        }
+
+        @media (max-height: 500px) and (orientation: landscape) {
+            #center-block {
+                padding-top: 10px;
+            }
+
+            #birthday-title {
+                font-size: 1.4rem;
+                margin-bottom: 10px;
+            }
+
+            .center-photo {
+                width: clamp(140px, 30vh, 220px);
+                margin-bottom: 15px;
+            }
+
+            #congratulation {
+                font-size: 0.85rem;
+                padding: 12px;
+                margin-bottom: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <audio id="bg-music" loop preload="auto">
+        <source src="music/barbariki.mp3" type="audio/mpeg">
+    </audio>
+
+    <div id="lock-screen">
+        <h1>Сайт заблокирован</h1>
+        <div id="timer">00:00:00</div>
+        <p>Доступ будет открыт 29.09.2026 в 00:00</p>
+    </div>
+
+    <div id="main-content">
+        <div id="photos-area"></div>
+
+        <div id="center-block">
+            <h1 id="birthday-title">С днём рождения!</h1>
+
+            <div id="center-photo-container" class="center-photo">
+                <img src="img/12.jpg" alt="Основное фото" id="center-img">
+            </div>
+
+            <div id="congratulation">
+                С днём рождения!<br>
+                Хочу пожелать всего наилучшего: счастья, здоровья, любви, благополучия, денег, женского счастья.<br>
+                Чтоб сбывались все твои мечты, всё задуманное осуществлялось, чтоб тебя окружали только люди с благими намерениями.<br>
+                Пусть каждый день приносит радость, а каждый вечер - уют и тепло. Пусть удача идёт с тобой рука об руку, а неприятности обходят стороной.<br>
+                Желаю, чтобы рядом всегда были верные друзья и любящие люди, чтобы дом был полон смеха и счастья, а сердце - спокойствия и любви.<br>
+                Пусть исполняются самые смелые желания, а мечты превращаются в реальность. Будь счастлива, любима и здорова.<br>
+                Желаю тебе море улыбок, океан позитива и бесконечного вдохновения. Пусть каждый новый день будет лучше предыдущего, а все начинания увенчиваются успехом!<br>
+                Пусть твоя жизнь будет похожа на сказку - добрую, яркую и счастливую. А рядом всегда будет человек, который поддержит, поймёт и разделит с тобой каждое мгновение.<br>
+                Цвети, сияй и радуйся каждому дню.<br>
+                С днём рождения
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+    <script>
+        const UNLOCK_DATE = new Date(2026, 8, 29, 0, 0, 0);
+
+        const PHOTOS = [
+            'img/1.jpg', 'img/2.jpg', 'img/3.jpg', 'img/4.jpg', 'img/5.jpg',
+            'img/6.jpg', 'img/7.jpg', 'img/8.jpg', 'img/9.jpg', 'img/10.jpg',
+            'img/11.jpg', 'img/13.jpg'
+        ];
+
+        const lockScreen = document.getElementById('lock-screen');
+        const timerElement = document.getElementById('timer');
+        const mainContent = document.getElementById('main-content');
+        const photosArea = document.getElementById('photos-area');
+        const centerPhotoContainer = document.getElementById('center-photo-container');
+        const birthdayTitle = document.getElementById('birthday-title');
+        const congratulation = document.getElementById('congratulation');
+        const bgMusic = document.getElementById('bg-music');
+
+        let isUnlocked = false;
+
+        function startBackgroundMusic() {
+            if (!bgMusic.paused) return;
+            bgMusic.volume = 0.4;
+            bgMusic.play().then(() => {
+                console.log('Музыка запущена');
+            }).catch(err => {
+                console.log('Музыка ждёт клика:', err.message);
+            });
+        }
+
+        function checkDate() {
+            const now = new Date();
+            if (now >= UNLOCK_DATE) { unlockSite(); return true; }
+            return false;
+        }
+
+        function updateTimer() {
+            if (isUnlocked) return;
+            const now = new Date();
+            const diff = UNLOCK_DATE - now;
+            if (diff <= 0) { unlockSite(); return; }
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            timerElement.textContent =
+                `${String(days).padStart(2, '0')}:${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        function unlockSite() {
+            if (isUnlocked) return;
+            isUnlocked = true;
+            lockScreen.style.opacity = '0';
+            setTimeout(() => {
+                lockScreen.style.display = 'none';
+                mainContent.style.display = 'block';
+                setTimeout(startAnimation, 500);
+                startBackgroundMusic();
+            }, 1000);
+        }
+
+        function shuffle(arr) {
+            const a = arr.slice();
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        function startAnimation() {
+            birthdayTitle.classList.add('show');
+            setTimeout(dropAllPhotos, 800);
+        }
+
+        function dropAllPhotos() {
+            const viewportW = window.innerWidth;
+
+            const pageHeight = Math.max(
+                window.innerHeight,
+                document.documentElement.scrollHeight,
+                document.body.scrollHeight
+            );
+
+            function getPhotoSize() {
+                const w = viewportW;
+                if (w < 380) return 75;
+                if (w < 600) return 90;
+                if (w < 900) return 120;
+                if (w < 1400) return 155;
+                return 180;
+            }
+            const photoSize = getPhotoSize();
+
+            const padding = 8;
+            const gap = 8;
+            const cellSize = photoSize + gap;
+
+            const centerBlockW = Math.min(viewportW * 0.55, 620);
+            const centerLeft = (viewportW - centerBlockW) / 2;
+            const centerRight = centerLeft + centerBlockW;
+
+            const centerTop = 0;
+            const centerBlockEl = document.getElementById('center-block');
+            let centerBottom = pageHeight * 0.85;
+            if (centerBlockEl) {
+                const rect = centerBlockEl.getBoundingClientRect();
+                centerBottom = rect.bottom + window.scrollY + 30;
+            }
+
+            const cols = Math.floor((viewportW - padding * 2) / cellSize);
+            const rows = Math.floor((pageHeight - padding * 2) / cellSize);
+
+            const grid = [];
+            for (let r = 0; r < rows; r++) {
+                const row = [];
+                for (let c = 0; c < cols; c++) {
+                    const cellX = padding + c * cellSize;
+                    const cellY = padding + r * cellSize;
+                    const cellCenterX = cellX + photoSize / 2;
+                    const cellCenterY = cellY + photoSize / 2;
+
+                    const inCenterX = cellCenterX > centerLeft && cellCenterX < centerRight;
+                    const inCenterY = cellCenterY > centerTop && cellCenterY < centerBottom;
+
+                    if (inCenterX && inCenterY) {
+                        row.push(null);
+                    } else {
+                        row.push({ x: cellX, y: cellY, r: r, c: c });
+                    }
+                }
+                grid.push(row);
+            }
+
+            const availableCells = [];
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    if (grid[r][c]) availableCells.push(grid[r][c]);
+                }
+            }
+
+            const MAX_PHOTOS = 150;
+            let cellsToFill = availableCells;
+            if (cellsToFill.length > MAX_PHOTOS) {
+                cellsToFill = shuffle(cellsToFill).slice(0, MAX_PHOTOS);
+            }
+
+            cellsToFill.sort((a, b) => {
+                if (a.row !== b.row) return a.row - b.row;
+                return a.col - b.col;
+            });
+
+            const byRow = {};
+            cellsToFill.forEach(p => {
+                if (!byRow[p.row]) byRow[p.row] = [];
+                byRow[p.row].push(p);
+            });
+            const finalOrder = [];
+            Object.keys(byRow).sort((a, b) => a - b).forEach(row => {
+                const shuffledRow = shuffle(byRow[row]);
+                finalOrder.push(...shuffledRow);
+            });
+
+            const placedMap = new Map();
+
+            function cellKey(r, c) {
+                return r + ',' + c;
+            }
+
+            function getForbiddenInRadius(r, c, radius) {
+                const forbidden = new Set();
+                for (let dr = -radius; dr <= radius; dr++) {
+                    for (let dc = -radius; dc <= radius; dc++) {
+                        if (dr === 0 && dc === 0) continue;
+                        const key = cellKey(r + dr, c + dc);
+                        if (placedMap.has(key)) {
+                            forbidden.add(placedMap.get(key));
+                        }
+                    }
+                }
+                return forbidden;
+            }
+
+            function getForbiddenInRow(r) {
+                const forbidden = new Set();
+                for (let c = 0; c < cols; c++) {
+                    const key = cellKey(r, c);
+                    if (placedMap.has(key)) {
+                        forbidden.add(placedMap.get(key));
+                    }
+                }
+                return forbidden;
+            }
+
+            function getForbiddenInCol(c, r) {
+                const forbidden = new Set();
+                for (let dr = -5; dr <= 5; dr++) {
+                    if (dr === 0) continue;
+                    const key = cellKey(r + dr, c);
+                    if (placedMap.has(key)) {
+                        forbidden.add(placedMap.get(key));
+                    }
+                }
+                return forbidden;
+            }
+
+            const usedCounts = new Array(PHOTOS.length).fill(0);
+            const totalPhotos = PHOTOS.length;
+
+            function pickPhotoForCell(r, c) {
+                const forbidden = new Set();
+
+                for (let radius = 3; radius <= 8; radius++) {
+                    const f = getForbiddenInRadius(r, c, radius);
+                    if (f.size < totalPhotos) {
+                        f.forEach(i => forbidden.add(i));
+                        break;
+                    }
+                    if (radius === 8) {
+                        f.forEach(i => forbidden.add(i));
+                    }
+                }
+
+                const rowForbidden = getForbiddenInRow(r);
+                rowForbidden.forEach(i => forbidden.add(i));
+
+                const colForbidden = getForbiddenInCol(c, r);
+                colForbidden.forEach(i => forbidden.add(i));
+
+                const available = [];
+                for (let i = 0; i < totalPhotos; i++) {
+                    if (!forbidden.has(i)) available.push(i);
+                }
+
+                let candidates = available;
+                if (candidates.length === 0) {
+                    candidates = [...Array(totalPhotos).keys()];
+                }
+
+                let minCount = Infinity;
+                candidates.forEach(i => {
+                    if (usedCounts[i] < minCount) minCount = usedCounts[i];
+                });
+
+                const best = candidates.filter(i => usedCounts[i] === minCount);
+                return best[Math.floor(Math.random() * best.length)];
+            }
+
+            const tasks = finalOrder.map(cell => {
+                const photoIdx = pickPhotoForCell(cell.row, cell.col);
+                placedMap.set(cellKey(cell.row, cell.col), photoIdx);
+                usedCounts[photoIdx]++;
+                return { cell, photoIdx };
+            });
+
+            let step = 0;
+
+            function dropNext() {
+                if (step >= tasks.length) {
+                    setTimeout(() => {
+                        centerPhotoContainer.classList.add('landed');
+                        setTimeout(showCongratulationAndCelebrate, 1200);
+                    }, 500);
+                    return;
+                }
+
+                const task = tasks[step];
+                const pos = task.cell;
+                const photoIdx = task.photoIdx;
+
+                const jitterX = (Math.random() - 0.5) * 5;
+                const jitterY = (Math.random() - 0.5) * 5;
+
+                const x = pos.x + jitterX;
+                const y = pos.y + jitterY;
+
+                const randomRot = (Math.random() - 0.5) * 6;
+
+                const container = document.createElement('div');
+                container.className = 'photo-container';
+                container.style.left = x + 'px';
+                container.style.top = y + 'px';
+                container.style.width = photoSize + 'px';
+                container.style.setProperty('--rot', randomRot + 'deg');
+
+                const img = document.createElement('img');
+                img.src = PHOTOS[photoIdx];
+                img.alt = `Фото ${photoIdx + 1}`;
+                img.loading = 'lazy';
+
+                container.appendChild(img);
+                photosArea.appendChild(container);
+
+                requestAnimationFrame(() => {
+                    setTimeout(() => {
+                        container.classList.add('landed');
+                    }, 50);
+                });
+
+                step++;
+                const nextDelay = 150 + Math.random() * 120;
+                setTimeout(dropNext, nextDelay);
+            }
+
+            setTimeout(dropNext, 200);
+        }
+
+        function showCongratulationAndCelebrate() {
+            congratulation.classList.add('show');
+            launchConfetti();
+            launchFireworks();
+            playFirecrackerSound();
+        }
+
+        function launchConfetti() {
+            const colors = ['#f0c8c0', '#e8a8a0', '#d9a8a0', '#fce4e0', '#fff5ec', '#e8cdc0'];
+
+            confetti({
+                particleCount: 120, spread: 70,
+                origin: { y: 0.6 },
+                colors: colors
+            });
+
+            setTimeout(() => {
+                confetti({
+                    particleCount: 80, spread: 100,
+                    origin: { y: 0.5, x: 0.2 },
+                    colors: colors
+                });
+                confetti({
+                    particleCount: 80, spread: 100,
+                    origin: { y: 0.5, x: 0.8 },
+                    colors: colors
+                });
+            }, 300);
+
+            setTimeout(() => {
+                confetti({
+                    particleCount: 150, spread: 120,
+                    origin: { y: 0.4 },
+                    colors: colors
+                });
+            }, 600);
+
+            let count = 0;
+            const interval = setInterval(() => {
+                confetti({
+                    particleCount: 25, spread: 60,
+                    origin: { x: Math.random(), y: Math.random() * 0.5 },
+                    colors: colors
+                });
+                count++;
+                if (count > 20) clearInterval(interval);
+            }, 200);
+        }
+
+        function launchFireworks() {
+            const positions = [
+                { x: 0.2, y: 0.25 },
+                { x: 0.8, y: 0.25 },
+                { x: 0.5, y: 0.15 },
+                { x: 0.15, y: 0.6 },
+                { x: 0.85, y: 0.6 },
+                { x: 0.35, y: 0.45 },
+                { x: 0.65, y: 0.45 }
+            ];
+
+            const fireworkColors = ['#f0c8c0', '#e8a8a0', '#d9a8a0', '#fce4e0', '#fff5ec', '#e8cdc0'];
+
+            positions.forEach((pos, idx) => {
+                setTimeout(() => {
+                    createFirework(
+                        window.innerWidth * pos.x,
+                        window.innerHeight * pos.y,
+                        fireworkColors[idx % fireworkColors.length]
+                    );
+                }, idx * 250);
+            });
+
+            let count = 0;
+            const interval = setInterval(() => {
+                createFirework(
+                    Math.random() * window.innerWidth,
+                    Math.random() * window.innerHeight * 0.7,
+                    fireworkColors[Math.floor(Math.random() * fireworkColors.length)]
+                );
+                count++;
+                if (count > 15) clearInterval(interval);
+            }, 400);
+        }
+
+        function createFirework(x, y, color) {
+            const burst = document.createElement('div');
+            burst.className = 'firework';
+            burst.style.left = x + 'px';
+            burst.style.top = y + 'px';
+            burst.style.background = `radial-gradient(circle, ${color} 0%, transparent 70%)`;
+            document.body.appendChild(burst);
+            setTimeout(() => burst.remove(), 1000);
+
+            const dotsCount = 20;
+            for (let i = 0; i < dotsCount; i++) {
+                const angle = (Math.PI * 2 * i) / dotsCount + Math.random() * 0.3;
+                const distance = 70 + Math.random() * 100;
+                const dx = Math.cos(angle) * distance;
+                const dy = Math.sin(angle) * distance;
+
+                const dot = document.createElement('div');
+                dot.className = 'firework-dot';
+                dot.style.left = x + 'px';
+                dot.style.top = y + 'px';
+                dot.style.background = color;
+                dot.style.boxShadow = `0 0 8px ${color}`;
+                dot.style.setProperty('--dx', dx + 'px');
+                dot.style.setProperty('--dy', dy + 'px');
+
+                document.body.appendChild(dot);
+                setTimeout(() => dot.remove(), 1300);
+            }
+        }
+
+        function playFirecrackerSound() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const bufferSize = audioCtx.sampleRate * 0.5;
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 2);
+                }
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = buffer;
+                const gainNode = audioCtx.createGain();
+                gainNode.gain.setValueAtTime(0.25, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(1000, audioCtx.currentTime);
+                filter.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.5);
+                noise.connect(filter);
+                filter.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                noise.start();
+                noise.stop(audioCtx.currentTime + 0.5);
+
+                setTimeout(() => {
+                    const audioCtx2 = new (window.AudioContext || window.webkitAudioContext)();
+                    const bufferSize2 = audioCtx2.sampleRate * 0.3;
+                    const buffer2 = audioCtx2.createBuffer(1, bufferSize2, audioCtx2.sampleRate);
+                    const data2 = buffer2.getChannelData(0);
+                    for (let i = 0; i < bufferSize2; i++) {
+                        data2[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize2, 3);
+                    }
+                    const noise2 = audioCtx2.createBufferSource();
+                    noise2.buffer = buffer2;
+                    const gain2 = audioCtx2.createGain();
+                    gain2.gain.setValueAtTime(0.15, audioCtx2.currentTime);
+                    gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx2.currentTime + 0.3);
+                    const filter2 = audioCtx2.createBiquadFilter();
+                    filter2.type = 'lowpass';
+                    filter2.frequency.setValueAtTime(800, audioCtx2.currentTime);
+                    filter2.frequency.exponentialRampToValueAtTime(80, audioCtx2.currentTime + 0.3);
+                    noise2.connect(filter2);
+                    filter2.connect(gain2);
+                    gain2.connect(audioCtx2.destination);
+                    noise2.start();
+                    noise2.stop(audioCtx2.currentTime + 0.3);
+                }, 150);
+            } catch (e) {
+                console.log('Аудио не поддерживается:', e);
+            }
+        }
+
+        if (!checkDate()) {
+            updateTimer();
+            setInterval(updateTimer, 1000);
+        }
+
+        setInterval(() => {
+            if (!isUnlocked) checkDate();
+        }, 1000);
+    </script>
+</body>
+</html>
